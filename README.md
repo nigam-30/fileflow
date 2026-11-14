@@ -138,11 +138,11 @@ FileFlow combines a high-performance Python engine with a modern, reactive user 
 ## 💾 Download & Install (For End Users)
 
 > [!IMPORTANT]
-> The pre-compiled Windows executable (`FileFlow-Setup-v1.0.0.exe`) is readily available in the **[Releases Section](https://github.com/nigam-30/fileflow/releases)**! 
+> The pre-compiled Windows executable (`FileFlow-Setup-v1.0.1.exe`) is readily available in the **[Releases Section](https://github.com/nigam-30/fileflow/releases)**! 
 > Zero technical knowledge required — you do **not** need to install Python, Node.js, or run any terminal commands.
 
 1. Go directly to the **[Releases](https://github.com/nigam-30/fileflow/releases)** page on GitHub.
-2. Under the latest release assets, download **`FileFlow-Setup-v1.0.0.exe`**.
+2. Under the latest release assets, download **`FileFlow-Setup-v1.0.1.exe`**.
 3. Run the installer and launch FileFlow! It will run as a native desktop application.
 
 ---
@@ -235,7 +235,7 @@ iscc installer/FileFlow.iss
 The compiled standalone executable and installer will be ready in:
 ```text
 dist/FileFlow/FileFlow.exe
-dist/FileFlow-Setup-v1.0.0.exe
+dist/FileFlow-Setup-v1.0.1.exe
 ```
 
 ---

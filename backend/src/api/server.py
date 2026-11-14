@@ -60,7 +60,7 @@ class OPENFILENAMEW(ctypes.Structure):
         ("FlagsEx", wintypes.DWORD),
     ]
 
-app = FastAPI(title="FileFlow Automation Engine", version="1.0.0")
+app = FastAPI(title="FileFlow Automation Engine", version="1.0.1")
 
 # Enable CORS for React frontend
 app.add_middleware(

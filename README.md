@@ -8,7 +8,9 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6.svg)](https://microsoft.com/windows)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB.svg?logo=python&logoColor=white)](https://python.org)
 [![React](https://img.shields.io/badge/Frontend-React%20%7C%20TypeScript-61DAFB.svg?logo=react&logoColor=black)](https://reactjs.org)
-[![Status](https://img.shields.io/badge/Status-100%25%20Free%20%26%20Offline-success.svg)](#)
+[![Download .exe](https://img.shields.io/badge/Download-.exe%20Installer-brightgreen?logo=windows&logoColor=white)](https://github.com/nigam-30/fileflow/releases)
+
+> 🚀 **Quick Download:** The pre-compiled standalone **`.exe`** installer is available in the **[Releases](https://github.com/nigam-30/fileflow/releases)** section. No technical setup, Python, or terminal commands needed!
 
 ---
 
@@ -64,6 +66,9 @@ With FileFlow active, the exact same cluttered directory is transformed into a c
   <img src="./assets/screenshots/sorted_downloads.png" alt="Neatly Sorted Downloads Folder" width="900" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
   <p><em><b>Figure 2: The FileFlow Result.</b> Files are instantly and automatically sorted into dedicated, clean category folders (<code>PDFS/</code>, <code>DOCX/</code>, <code>IMAGES/</code>, <code>XLSX/</code>, <code>PPTS/</code>, <code>SVG/</code>, <code>ZIPS/</code>) without you lifting a finger.</em></p>
 </div>
+
+> [!NOTE]
+> **You have to create folders manually first, and then you can choose that as destination.**
 
 ---
 
@@ -131,12 +136,13 @@ FileFlow combines a high-performance Python engine with a modern, reactive user 
 
 ## 💾 Download & Install (For End Users)
 
-> [!TIP]
-> **Zero technical knowledge required:** Regular users **do not** need Python, Node.js, npm, or terminal commands.
+> [!IMPORTANT]
+> The pre-compiled Windows executable (`FileFlow-Setup-v1.0.0.exe`) is readily available in the **[Releases Section](https://github.com/nigam-30/fileflow/releases)**! 
+> Zero technical knowledge required — you do **not** need to install Python, Node.js, or run any terminal commands.
 
-1. Go to the **[Releases](https://github.com/nigam-30/fileflow/releases)** section.
-2. Download **`FileFlow-Setup-v1.0.0.exe`**.
-3. Run the installer and launch FileFlow! It will start running as a native Windows desktop application.
+1. Go directly to the **[Releases](https://github.com/nigam-30/fileflow/releases)** page on GitHub.
+2. Under the latest release assets, download **`FileFlow-Setup-v1.0.0.exe`**.
+3. Run the installer and launch FileFlow! It will run as a native desktop application.
 
 ---
 

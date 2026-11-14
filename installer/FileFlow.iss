@@ -4,7 +4,7 @@
 #define MyAppName "FileFlow"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "FileFlow Open Source"
-#define MyAppURL "https://github.com/fileflow"
+#define MyAppURL "https://github.com/nigam-30/fileflow"
 #define MyAppExeName "FileFlow.exe"
 
 [Setup]

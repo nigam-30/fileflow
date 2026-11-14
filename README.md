@@ -134,7 +134,7 @@ FileFlow combines a high-performance Python engine with a modern, reactive user 
 > [!TIP]
 > **Zero technical knowledge required:** Regular users **do not** need Python, Node.js, npm, or terminal commands.
 
-1. Go to the **[Releases](https://github.com/your-username/fileflow/releases)** section.
+1. Go to the **[Releases](https://github.com/nigam-30/fileflow/releases)** section.
 2. Download **`FileFlow-Setup-v1.0.0.exe`**.
 3. Run the installer and launch FileFlow! It will start running as a native Windows desktop application.
 
@@ -149,7 +149,7 @@ FileFlow combines a high-performance Python engine with a modern, reactive user 
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/your-username/fileflow.git
+git clone https://github.com/nigam-30/fileflow.git
 cd fileflow
 ```
 

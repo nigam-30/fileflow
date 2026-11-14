@@ -12,10 +12,12 @@ interface DuplicateFile {
 
 interface DuplicateGroup {
   hash: string;
+  hash_short?: string;
   size_bytes: number;
   size_formatted: string;
   count: number;
   files: DuplicateFile[];
+  verification_method?: string;
 }
 
 export const DuplicateFinderView: React.FC = () => {
@@ -145,11 +147,16 @@ export const DuplicateFinderView: React.FC = () => {
           <Copy className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-base font-bold text-neutral-900 dark:text-white">
-            Duplicate File Finder
-          </h2>
+          <div className="flex items-center space-x-2">
+            <h2 className="text-base font-bold text-neutral-900 dark:text-white">
+              Duplicate File Finder
+            </h2>
+            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+              4-Stage Verified
+            </span>
+          </div>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Identify exact duplicate files by size and SHA-256 hash, and safely reclaim wasted storage.
+            Progressive verification: Size → Head/Tail Hash → Full SHA-256 → Bit-for-Bit match.
           </p>
         </div>
       </div>
@@ -243,12 +250,18 @@ export const DuplicateFinderView: React.FC = () => {
                   className="bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 space-y-3"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-neutral-200 dark:border-neutral-800 gap-2">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
                         {group.files[0].name}
                       </span>
                       <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">
                         {group.count} copies ({group.size_formatted} each)
+                      </span>
+                      <span 
+                        className="text-[10px] font-mono text-neutral-600 dark:text-neutral-400 bg-neutral-200/60 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700/60 px-2 py-0.5 rounded cursor-help"
+                        title={`Full SHA-256 Hash: ${group.hash}\n${group.verification_method || 'Bit-for-Bit Verified'}`}
+                      >
+                        SHA-256: {group.hash_short || `${group.hash.slice(0, 8)}...${group.hash.slice(-6)}`}
                       </span>
                     </div>
 

@@ -146,32 +146,71 @@ FileFlow combines a high-performance Python engine with a modern, reactive user 
 
 ---
 
-## 🛠️ Building from Source (For Developers Only)
+## 🛠️ Building & Running from Source (For Developers)
 
 ### Prerequisites
 - [Python 3.11+](https://www.python.org/)
 - [Node.js 18+](https://nodejs.org/) & npm
-- [Inno Setup 6](https://jrsoftware.org/isinfo.php) (optional, for compiling the setup installer)
+- [Inno Setup 6](https://jrsoftware.org/isinfo.php) *(optional, only needed for compiling the Windows installer)*
 
-### 1. Clone Repository
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/nigam-30/fileflow.git
 cd fileflow
 ```
 
-### 2. Backend Setup
+### 2. Install Dependencies & Build Frontend
+
+**Install Backend Dependencies:**
 ```bash
-cd backend
-pip install -r requirements.txt
-python run.py
+pip install -r backend/requirements.txt
 ```
 
-### 3. Frontend Setup
+**Install Frontend Dependencies & Build:**
 ```bash
 cd frontend
 npm install
 npm run build
+cd ..
 ```
+*(Building the frontend generates the production UI bundle required by the desktop window).*
+
+---
+
+### 3. Run FileFlow
+
+#### Option A: Native Desktop App (Recommended)
+Once the frontend is built, launch FileFlow directly from the root directory:
+```bash
+python run.py
+```
+*(Or run `python backend/run.py`)*
+
+#### Option B: Full-Stack Dev Mode (Live Hot Reloading)
+For active development with Vite instant reload:
+
+1. **Terminal 1 (Backend Server):**
+   ```bash
+   cd backend
+   python -m uvicorn src.api.server:app --reload --port 8765
+   ```
+
+2. **Terminal 2 (Frontend Dev Server):**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+   Open **`http://localhost:3000`** in your browser. Changes will update in real time!
+
+---
+
+### 🧪 Running Developer Tests
+
+Execute the automated test suite with `pytest`:
+```bash
+python -m pytest
+```
+Tests automatically verify rule conditions, content extraction, collision resolution, and database logging.
 
 ---
 

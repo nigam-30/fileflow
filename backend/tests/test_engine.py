@@ -1,7 +1,15 @@
 import os
+import sys
 import shutil
 import tempfile
 import pytest
+
+# Ensure backend directory is in sys.path so tests can be run from any directory
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+BACKEND_DIR = os.path.dirname(TEST_DIR)
+if BACKEND_DIR not in sys.path:
+    sys.path.insert(0, BACKEND_DIR)
+
 from src.core.models import Rule, Condition, ConditionOperator, MatchMode, Action, ActionType, CollisionPolicy, LogStatus
 from src.core.database import Database
 from src.core.engine import RuleEngine

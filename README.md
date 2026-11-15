@@ -12,15 +12,6 @@
 
 > 🚀 **Quick Download:** The pre-compiled standalone **`.exe`** installer is available in the **[Releases](https://github.com/nigam-30/fileflow/releases)** section. No technical setup, Python, or terminal commands needed!
 
----
-## ⚡ TL;DR
-
-- **What it is:** A free, open-source, 100% offline Windows desktop app that automatically organizes your messy folders (`Downloads`, `Desktop`, etc.) in real time.
-- **How it works:** Set up custom rules once (by file extension, PDF text, image EXIF dates, or regex) and FileFlow auto-renames, sorts, compresses, or cleans up files in the background.
-- **Standout features:** Ultra-fast 4-stage byte-for-byte duplicate finder, live dry-run rule simulator, safe Recycle Bin deletion, and zero cloud/account requirements.
-- **Get started(For Users):** Grab `FileFlow-Setup-v1.0.1.exe` from **[Releases](https://github.com/nigam-30/fileflow/releases)**—no Python or terminal setup needed.
--  **Get started (For Developers):** Clone the repo, install Python (`requirements.txt`) & React (`npm run build`) dependencies, and run `python run.py`—see **[Building & Running from Source](#%EF%B8%8F-building--running-from-source-for-developers)**.
-
   ---
 
 ## 😫 The Problem: The Chaos & Endless Clutter
@@ -256,6 +247,13 @@ dist/FileFlow-Setup-v1.0.1.exe
 - **Safe File Locking**: Real-time event debouncing ensures files are completely finished saving or downloading before any rule moves them.
 
 ---
+## ⚡ TL;DR
+
+- **What it is:** A free, open-source, 100% offline Windows desktop app that automatically organizes your messy folders (`Downloads`, `Desktop`, etc.) in real time.
+- **How it works:** Set up custom rules once (by file extension, PDF text, image EXIF dates, or regex) and FileFlow auto-renames, sorts, compresses, or cleans up files in the background.
+- **Standout features:** Ultra-fast 4-stage byte-for-byte duplicate finder, live dry-run rule simulator, safe Recycle Bin deletion, and zero cloud/account requirements.
+- **Get started(For Users):** Grab `FileFlow-Setup-v1.0.1.exe` from **[Releases](https://github.com/nigam-30/fileflow/releases)**—no Python or terminal setup needed.
+-  **Get started (For Developers):** Clone the repo, install Python (`requirements.txt`) & React (`npm run build`) dependencies, and run `python run.py`—see **[Building & Running from Source](#%EF%B8%8F-building--running-from-source-for-developers)**.
 
 ## 🤝 Acknowledgements & Special Thanks
 

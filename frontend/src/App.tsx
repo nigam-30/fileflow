@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Rule, MonitoredFolder, AuditLogEntry } from './types';
+import { Rule, MonitoredFolder, AuditLogEntry, UpdateInfo } from './types';
 import { Header } from './components/Header';
 import { RuleCard } from './components/RuleCard';
 import { RuleBuilderModal } from './components/RuleBuilderModal';
@@ -8,7 +8,8 @@ import { DuplicateFinderView } from './components/DuplicateFinderView';
 import { AuditLogView } from './components/AuditLogView';
 import { RuleTester } from './components/RuleTester';
 import { LegalModal } from './components/LegalModal';
-import { Plus, Sliders, Folder, History, FlaskConical, Copy, ShieldCheck } from 'lucide-react';
+import { UpdateModal } from './components/UpdateModal';
+import { Plus, Sliders, Folder, History, FlaskConical, Copy, ShieldCheck, Sparkles, X } from 'lucide-react';
 
 export function App() {
   const [rules, setRules] = useState<Rule[]>([]);
@@ -20,6 +21,11 @@ export function App() {
   const [isScanning, setIsScanning] = useState(false);
   const [isLegalOpen, setIsLegalOpen] = useState(false);
   const [legalTab, setLegalTab] = useState<'privacy' | 'terms'>('privacy');
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [dismissedUpdate, setDismissedUpdate] = useState<string>(() => {
+    return localStorage.getItem('fileflow_dismissed_update') || '';
+  });
 
   // Dark/Light Theme state with localStorage persistence (Default: Light Mode)
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -57,10 +63,58 @@ export function App() {
     }
   };
 
+  const checkUpdates = async () => {
+    try {
+      const res = await fetch('/api/app/update');
+      if (res.ok) {
+        const info: UpdateInfo = await res.json();
+        setUpdateInfo(info);
+      }
+    } catch (err) {
+      console.error('Failed to check for updates', err);
+    }
+  };
+
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 4000);
-    return () => clearInterval(interval);
+    checkUpdates();
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const startPolling = () => {
+      if (!interval) {
+        interval = setInterval(() => {
+          if (document.visibilityState === 'visible') {
+            fetchData();
+          }
+        }, 4000);
+      }
+    };
+
+    const stopPolling = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    };
+
+    startPolling();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', fetchData);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', fetchData);
+    };
   }, []);
 
   const handleToggleRule = async (id: string) => {
@@ -131,7 +185,10 @@ export function App() {
         method: 'DELETE',
       });
       if (res.ok) {
-        setFolders(folders.filter((f) => f.path !== path));
+        const data = await res.json();
+        if (data.success) {
+          setFolders((prev) => prev.filter((f) => f.path.toLowerCase() !== path.toLowerCase()));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -152,6 +209,36 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-neutral-900 dark:text-neutral-100 flex flex-col transition-colors duration-200">
+      {/* Top Update Notification Banner */}
+      {updateInfo?.update_available && dismissedUpdate !== updateInfo.latest_version && (
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-2.5 text-xs flex items-center justify-between shadow-md transition-all">
+          <div className="flex items-center space-x-2">
+            <Sparkles className="w-4 h-4 text-amber-300 shrink-0 animate-pulse" />
+            <span>
+              <strong>New Update Available:</strong> FileFlow v{updateInfo.latest_version} is now available!
+            </span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setIsUpdateModalOpen(true)}
+              className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition active:scale-95"
+            >
+              View Update
+            </button>
+            <button
+              onClick={() => {
+                localStorage.setItem('fileflow_dismissed_update', updateInfo.latest_version);
+                setDismissedUpdate(updateInfo.latest_version);
+              }}
+              className="text-white/70 hover:text-white p-1 rounded transition"
+              title="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <Header
         onScanNow={handleScanNow}
         isScanning={isScanning}
@@ -163,6 +250,8 @@ export function App() {
           setLegalTab('privacy');
           setIsLegalOpen(true);
         }}
+        updateInfo={updateInfo}
+        onOpenUpdateModal={() => setIsUpdateModalOpen(true)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
@@ -334,6 +423,12 @@ export function App() {
         isOpen={isLegalOpen}
         onClose={() => setIsLegalOpen(false)}
         initialTab={legalTab}
+      />
+
+      <UpdateModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        updateInfo={updateInfo}
       />
     </div>
   );

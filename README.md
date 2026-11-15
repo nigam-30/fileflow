@@ -118,6 +118,21 @@ With FileFlow active, the exact same cluttered directory is transformed into a c
 ### 🗑️ 10. Complete Windows Uninstallation Support
 - Registered under Windows **Settings → Apps → Installed apps** and **Control Panel** with full uninstaller support (`unins000.exe` and `uninstall.cmd`), allowing clean removal and optional rule preservation anytime.
 
+### 🗔 11. Background Running with Windows System Tray
+- Clicking the close button (`X`) minimizes FileFlow to the Windows notification tray instead of stopping your automation. Rules continue organizing files seamlessly in the background.
+- Right-click tray menu provides instant controls: **Open FileFlow**, **Scan / Organize Now**, **Check for Updates**, and clean **Exit**.
+- Windows notifications inform you when the app is minimized and when background tasks complete.
+
+### ⚡ 12. Ultra-Lightweight RAM Footprint (~20–35 MB on 4GB PCs)
+- Engineered specifically to run silently on low-spec/4GB RAM machines with minimal resource consumption.
+- Automatically pauses UI polling when minimized via the **Page Visibility API**, eliminating CPU and React re-render churn.
+- Uses Windows working set trimming (`EmptyWorkingSet`) on both Python and WebView2 helper processes, flushing idle cache to disk and dropping memory usage to under 35 MB in the tray.
+
+### 🔔 13. In-App Update Notifications & Changelog
+- Built-in GitHub Releases updater checks for new versions in the background with smart 2-hour caching.
+- Clean notification banner and animated header badge alert you when an update is available.
+- Interactive **Update Modal** lets you review what's new and download the latest installer with a single click.
+
 ---
 
 ## 🏗️ Architecture
@@ -127,6 +142,7 @@ FileFlow combines a high-performance Python engine with a modern, reactive user 
 | Layer | Technologies |
 |---|---|
 | **Core Automation Engine** | Python 3.11+, FastAPI, Uvicorn, Watchdog |
+| **System Tray & Memory** | Pystray, Psutil, Windows Win32 API (`EmptyWorkingSet`) |
 | **Document & Media Parsers** | PyPDF, Pillow, Send2Trash |
 | **Frontend UI** | React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons |
 | **Desktop Wrapper** | PyWebView (Microsoft Edge WebView2 Engine) |
@@ -138,11 +154,11 @@ FileFlow combines a high-performance Python engine with a modern, reactive user 
 ## 💾 Download & Install (For End Users)
 
 > [!IMPORTANT]
-> The pre-compiled Windows executable (`FileFlow-Setup-v1.0.1.exe`) is readily available in the **[Releases Section](https://github.com/nigam-30/fileflow/releases)**! 
+> The pre-compiled Windows executable (`FileFlow-Setup-v1.0.2.exe`) is readily available in the **[Releases Section](https://github.com/nigam-30/fileflow/releases)**! 
 > Zero technical knowledge required — you do **not** need to install Python, Node.js, or run any terminal commands.
 
 1. Go directly to the **[Releases](https://github.com/nigam-30/fileflow/releases)** page on GitHub.
-2. Under the latest release assets, download **`FileFlow-Setup-v1.0.1.exe`**.
+2. Under the latest release assets, download **`FileFlow-Setup-v1.0.2.exe`**.
 3. Run the installer and launch FileFlow! It will run as a native desktop application.
 
 ---
@@ -235,7 +251,7 @@ iscc installer/FileFlow.iss
 The compiled standalone executable and installer will be ready in:
 ```text
 dist/FileFlow/FileFlow.exe
-dist/FileFlow-Setup-v1.0.1.exe
+dist/FileFlow-Setup-v1.0.2.exe
 ```
 
 ---

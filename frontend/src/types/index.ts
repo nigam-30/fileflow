@@ -73,3 +73,14 @@ export interface AuditLogEntry {
   status: 'success' | 'skipped' | 'failed' | 'info';
   details?: string;
 }
+
+export interface UpdateInfo {
+  update_available: boolean;
+  current_version: string;
+  latest_version: string;
+  release_name: string;
+  release_notes: string;
+  release_url: string;
+  download_url: string;
+  published_at: string;
+}

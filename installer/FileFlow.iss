@@ -2,7 +2,7 @@
 ; Compiles FileFlow into a single setup.exe installer with complete uninstallation support
 
 #define MyAppName "FileFlow"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.0.2"
 #define MyAppPublisher "FileFlow Open Source"
 #define MyAppURL "https://github.com/nigam-30/fileflow"
 #define MyAppExeName "FileFlow.exe"

@@ -7,5 +7,7 @@ send2trash>=1.8.2
 pyyaml>=6.0.1
 pillow>=10.2.0
 pywebview>=5.0.0
+pystray>=0.19.5
+psutil>=5.9.0
 pyinstaller>=6.0.0
 pytest>=8.0.0

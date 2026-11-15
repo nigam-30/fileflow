@@ -72,6 +72,7 @@ class DirectoryWatcher:
         self.observer = Observer()
         self.handler = FileEventHandler(on_file_ready=self.process_file)
         self.watched_paths: Set[str] = set()
+        self.watches: Dict[str, Any] = {}
 
     def process_file(self, file_path: str):
         print(f"[EVENT] File ready for processing: {file_path}")
@@ -84,10 +85,26 @@ class DirectoryWatcher:
         if not os.path.exists(folder_path):
             os.makedirs(folder_path, exist_ok=True)
 
-        if folder_path not in self.watched_paths:
-            self.observer.schedule(self.handler, folder_path, recursive=recursive)
-            self.watched_paths.add(folder_path)
-            print(f"[WATCHER] Now monitoring: {folder_path} (recursive={recursive})")
+        clean_key = os.path.normcase(os.path.normpath(folder_path)).rstrip(os.sep)
+        if clean_key not in self.watches:
+            try:
+                watch = self.observer.schedule(self.handler, folder_path, recursive=recursive)
+                self.watches[clean_key] = watch
+                self.watched_paths.add(folder_path)
+                print(f"[WATCHER] Now monitoring: {folder_path} (recursive={recursive})")
+            except Exception as e:
+                print(f"[WATCHER ERROR] Failed to schedule {folder_path}: {e}")
+
+    def unwatch_folder(self, folder_path: str):
+        clean_key = os.path.normcase(os.path.normpath(folder_path)).rstrip(os.sep)
+        watch = self.watches.pop(clean_key, None)
+        if watch:
+            try:
+                self.observer.unschedule(watch)
+                print(f"[WATCHER] Successfully stopped monitoring: {folder_path}")
+            except Exception as e:
+                print(f"[WATCHER ERROR] Failed to unschedule {folder_path}: {e}")
+        self.watched_paths = {p for p in self.watched_paths if os.path.normcase(os.path.normpath(p)).rstrip(os.sep) != clean_key}
 
     def start(self):
         if not self.observer.is_alive():

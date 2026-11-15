@@ -60,7 +60,7 @@ class OPENFILENAMEW(ctypes.Structure):
         ("FlagsEx", wintypes.DWORD),
     ]
 
-app = FastAPI(title="FileFlow Automation Engine", version="1.0.1")
+app = FastAPI(title="FileFlow Automation Engine", version="1.0.2")
 
 # Enable CORS for React frontend
 app.add_middleware(
@@ -235,7 +235,23 @@ def add_folder(req: FolderRequest):
 
 @app.delete("/api/folders")
 def remove_folder(path: str):
-    db.remove_monitored_folder(path)
+    success = db.remove_monitored_folder(path)
+    watcher.unwatch_folder(path)
+    return {"success": success}
+
+# --- App Update & System Helpers ---
+class OpenUrlRequest(BaseModel):
+    url: str
+
+@app.get("/api/app/update")
+def get_update_status(force: bool = False):
+    from ..core.updater import check_for_updates
+    return check_for_updates(force=force)
+
+@app.post("/api/open-external")
+def open_external_url(req: OpenUrlRequest):
+    import webbrowser
+    webbrowser.open(req.url)
     return {"success": True}
 
 # --- Activity Logs ---
@@ -284,15 +300,13 @@ def trigger_scan():
     folders = db.get_monitored_folders()
     folder_set = {os.path.normpath(f["path"]).lower(): (f["path"], f.get("recursive", False)) for f in folders}
     
-    # Also include any folders configured on enabled rules
+    # Also include any folders configured on enabled rules for this scan run
     rules = db.get_rules(enabled_only=True)
     for r in rules:
         for mf in r.monitored_folders:
             clean = os.path.normpath(mf.strip())
             if clean and os.path.exists(clean) and clean.lower() not in folder_set:
                 folder_set[clean.lower()] = (clean, False)
-                db.add_monitored_folder(clean, recursive=False)
-                watcher.watch_folder(clean, recursive=False)
 
     total_processed = 0
     for key, (folder_path, recursive) in folder_set.items():

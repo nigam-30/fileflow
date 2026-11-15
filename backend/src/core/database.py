@@ -90,7 +90,7 @@ class Database:
             # Monitored folders table
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS monitored_folders (
-                    path TEXT PRIMARY KEY,
+                    path TEXT PRIMARY KEY COLLATE NOCASE,
                     recursive INTEGER NOT NULL DEFAULT 0,
                     enabled INTEGER NOT NULL DEFAULT 1,
                     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -169,7 +169,9 @@ class Database:
 
     # Monitored Folders Operations
     def add_monitored_folder(self, path: str, recursive: bool = False) -> bool:
-        norm_path = os.path.normpath(path)
+        norm_path = os.path.normpath(path.strip()).rstrip(os.sep)
+        if not norm_path:
+            return False
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -180,12 +182,21 @@ class Database:
             return True
 
     def remove_monitored_folder(self, path: str) -> bool:
-        norm_path = os.path.normpath(path)
+        target = os.path.normcase(os.path.normpath(path.strip())).rstrip(os.sep)
+        if not target:
+            return False
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM monitored_folders WHERE path = ?", (norm_path,))
+            cursor.execute("SELECT path FROM monitored_folders")
+            rows = cursor.fetchall()
+            deleted = False
+            for r in rows:
+                p_norm = os.path.normcase(os.path.normpath(r["path"])).rstrip(os.sep)
+                if p_norm == target:
+                    cursor.execute("DELETE FROM monitored_folders WHERE path = ?", (r["path"],))
+                    deleted = True
             conn.commit()
-            return cursor.rowcount > 0
+            return deleted
 
     def get_monitored_folders(self) -> List[Dict[str, Any]]:
         with self._get_connection() as conn:

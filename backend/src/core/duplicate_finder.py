@@ -3,6 +3,7 @@ import hashlib
 from typing import List, Dict, Any, Optional
 from concurrent.futures import ThreadPoolExecutor
 from send2trash import send2trash
+from .memory import trim_memory
 
 IGNORE_DIRS = {
     '.git', '.svn', '.hg', 'node_modules', '__pycache__', 
@@ -181,6 +182,7 @@ class DuplicateFinder:
 
         # Sort by total wasted space descending
         duplicate_results.sort(key=lambda x: x["size_bytes"] * (x["count"] - 1), reverse=True)
+        trim_memory()
         return duplicate_results
 
     @staticmethod

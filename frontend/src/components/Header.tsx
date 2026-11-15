@@ -1,5 +1,6 @@
 import React from 'react';
-import { Layers, RefreshCw, Sun, Moon, ShieldCheck } from 'lucide-react';
+import { Layers, RefreshCw, Sun, Moon, ShieldCheck, Sparkles } from 'lucide-react';
+import { UpdateInfo } from '../types';
 
 interface HeaderProps {
   onScanNow: () => void;
@@ -9,6 +10,8 @@ interface HeaderProps {
   darkMode: boolean;
   onToggleTheme: () => void;
   onOpenLegal: () => void;
+  updateInfo?: UpdateInfo | null;
+  onOpenUpdateModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,6 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   darkMode,
   onToggleTheme,
   onOpenLegal,
+  updateInfo,
+  onOpenUpdateModal,
 }) => {
   return (
     <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-black/80 backdrop-blur sticky top-0 z-20 px-6 py-4">
@@ -55,6 +60,18 @@ export const Header: React.FC<HeaderProps> = ({
             <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <span className="hidden md:inline">Privacy & Terms</span>
           </button>
+
+          {/* In-App Update Badge */}
+          {updateInfo?.update_available && (
+            <button
+              onClick={onOpenUpdateModal}
+              className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/20 hover:opacity-95 transition active:scale-95 animate-pulse"
+              title={`Update v${updateInfo.latest_version} available! Click to view.`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Update v{updateInfo.latest_version}</span>
+            </button>
+          )}
 
           {/* Theme Toggle */}
           <button

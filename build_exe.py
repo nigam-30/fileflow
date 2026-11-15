@@ -59,6 +59,9 @@ pyinstaller_args = [
     "--hidden-import=pypdf",
     "--hidden-import=PIL",
     "--hidden-import=webview",
+    "--hidden-import=pystray",
+    "--hidden-import=pystray._win32",
+    "--hidden-import=psutil",
     "--distpath=" + os.path.join(ROOT_DIR, "dist"),
     "--workpath=" + os.path.join(ROOT_DIR, "build"),
     os.path.join(BACKEND_DIR, "run.py")

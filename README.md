@@ -248,6 +248,10 @@ dist/FileFlow-Setup-v1.0.1.exe
 
 ---
 
+## 🤝 Acknowledgements & Special Thanks
+
+- **[Shravan / @shravan3161](https://github.com/shravan3161)** — Special thanks for rigorous QA testing, spotting duplicate detection bottlenecks, and validating developer test workflows.
+
 ## 📜 License
 
 Distributed under the **MIT License**. Free for personal, commercial, and educational use. See `LICENSE` for details.

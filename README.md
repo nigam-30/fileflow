@@ -19,7 +19,7 @@
 - **What it is:** A free, open-source, 100% offline Windows desktop app that automatically organizes your messy folders (`Downloads`, `Desktop`, etc.) in real time.
 - **How it works:** Set up custom rules once (by file extension, PDF text, image EXIF dates, or regex) and FileFlow auto-renames, sorts, compresses, or cleans up files in the background.
 - **Standout features:** Ultra-fast 4-stage byte-for-byte duplicate finder, live dry-run rule simulator, safe Recycle Bin deletion, and zero cloud/account requirements.
-- **Get started(For Users):** Grab `FileFlow-Setup-v1.0.2.exe` from **[Releases](https://github.com/nigam-30/fileflow/releases)**—no Python or terminal setup needed.
+- **Get started(For Users):** Grab `FileFlow-Setup-v1.0.3.exe` from **[Releases](https://github.com/nigam-30/fileflow/releases)**—no Python or terminal setup needed.
 -  **Get started (For Developers):** Clone the repo, install Python (`requirements.txt`) & React (`npm run build`) dependencies, and run `python run.py`—see **[Building & Running from Source](#%EF%B8%8F-building--running-from-source-for-developers)**.
 
 ## 😫 The Problem: The Chaos & Endless Clutter
@@ -162,11 +162,11 @@ FileFlow combines a high-performance Python engine with a modern, reactive user 
 ## 💾 Download & Install (For End Users)
 
 > [!IMPORTANT]
-> The pre-compiled Windows executable (`FileFlow-Setup-v1.0.2.exe`) is readily available in the **[Releases Section](https://github.com/nigam-30/fileflow/releases)**! 
+> The pre-compiled Windows executable (`FileFlow-Setup-v1.0.3.exe`) is readily available in the **[Releases Section](https://github.com/nigam-30/fileflow/releases)**! 
 > Zero technical knowledge required — you do **not** need to install Python, Node.js, or run any terminal commands.
 
 1. Go directly to the **[Releases](https://github.com/nigam-30/fileflow/releases)** page on GitHub.
-2. Under the latest release assets, download **`FileFlow-Setup-v1.0.2.exe`**.
+2. Under the latest release assets, download **`FileFlow-Setup-v1.0.3.exe`**.
 3. Run the installer and launch FileFlow! It will run as a native desktop application.
 
 ---
@@ -259,7 +259,7 @@ iscc installer/FileFlow.iss
 The compiled standalone executable and installer will be ready in:
 ```text
 dist/FileFlow/FileFlow.exe
-dist/FileFlow-Setup-v1.0.2.exe
+dist/FileFlow-Setup-v1.0.3.exe
 ```
 
 ---

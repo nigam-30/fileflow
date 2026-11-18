@@ -1,6 +1,6 @@
 import os
 import hashlib
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 from concurrent.futures import ThreadPoolExecutor
 from send2trash import send2trash
 from .memory import trim_memory
@@ -12,6 +12,31 @@ IGNORE_DIRS = {
 }
 
 class DuplicateFinder:
+    _scanned_duplicates: Set[str] = set()
+
+    @classmethod
+    def record_scanned_duplicates(cls, file_paths: List[str]):
+        for p in file_paths:
+            try:
+                cls._scanned_duplicates.add(os.path.abspath(os.path.realpath(p)).lower())
+            except Exception:
+                pass
+
+    @classmethod
+    def is_known_duplicate(cls, file_path: str) -> bool:
+        try:
+            normalized = os.path.abspath(os.path.realpath(file_path)).lower()
+            return normalized in cls._scanned_duplicates
+        except Exception:
+            return False
+
+    @classmethod
+    def unrecord_duplicate(cls, file_path: str):
+        try:
+            normalized = os.path.abspath(os.path.realpath(file_path)).lower()
+            cls._scanned_duplicates.discard(normalized)
+        except Exception:
+            pass
     @staticmethod
     def get_dual_sample_hash(filepath: str, sample_size: int = 8192) -> Optional[str]:
         """
@@ -182,6 +207,15 @@ class DuplicateFinder:
 
         # Sort by total wasted space descending
         duplicate_results.sort(key=lambda x: x["size_bytes"] * (x["count"] - 1), reverse=True)
+        
+        # Record all discovered duplicate paths for safe deletion verification
+        all_dup_paths = []
+        for grp in duplicate_results:
+            for f in grp.get("files", []):
+                if "path" in f:
+                    all_dup_paths.append(f["path"])
+        cls.record_scanned_duplicates(all_dup_paths)
+
         trim_memory()
         return duplicate_results
 
@@ -196,15 +230,44 @@ class DuplicateFinder:
         else:
             return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
-    @staticmethod
-    def delete_file(file_path: str, recycle: bool = True) -> bool:
-        if not os.path.exists(file_path):
+    @classmethod
+    def delete_file(cls, file_path: str, recycle: bool = True) -> bool:
+        if not os.path.exists(file_path) or not os.path.isfile(file_path):
             return False
+
         try:
+            real_path = os.path.abspath(os.path.realpath(file_path))
+
+            # Block deletion of critical system directories and application data roots
+            restricted_roots = []
+            sys_root = os.environ.get("SystemRoot")
+            if sys_root:
+                restricted_roots.append(sys_root)
+            prog_files = os.environ.get("ProgramFiles")
+            if prog_files:
+                restricted_roots.append(prog_files)
+            prog_files_x86 = os.environ.get("ProgramFiles(x86)")
+            if prog_files_x86:
+                restricted_roots.append(prog_files_x86)
+            app_data = os.environ.get("APPDATA")
+            if app_data:
+                restricted_roots.append(os.path.join(app_data, "FileFlowData"))
+
+            for root in restricted_roots:
+                if root:
+                    try:
+                        abs_root = os.path.abspath(os.path.realpath(root))
+                        if os.path.commonpath([abs_root, real_path]) == abs_root:
+                            return False
+                    except ValueError:
+                        continue
+
             if recycle:
-                send2trash(file_path)
+                send2trash(real_path)
             else:
-                os.remove(file_path)
+                os.remove(real_path)
+
+            cls.unrecord_duplicate(real_path)
             return True
         except Exception:
             return False

@@ -10,6 +10,17 @@ from ..extractors.pdf_extractor import PdfExtractor
 from ..extractors.media_extractor import MediaExtractor
 from ..actions.dispatcher import ActionDispatcher
 
+# System-reserved variable keys that cannot be overwritten by dynamic regex capture groups
+RESERVED_VARIABLE_KEYS = {
+    "file.name", "file.stem", "file.extension", "file.size_bytes", "file.size_formatted",
+    "file.created_date", "file.created_year", "file.created_month", "file.created_day",
+    "file.modified_date", "file.directory", "file.path",
+    "content.text", "content.snippet", "content.word_count", "content.line_count",
+    "pdf.title", "pdf.author", "pdf.subject", "pdf.creator", "pdf.page_count", "pdf.created_date",
+    "image.width", "image.height", "image.camera_make", "image.camera_model", "image.date_taken",
+    "image.iso", "image.format"
+}
+
 class RuleEngine:
     def __init__(self, db: Database):
         self.db = db
@@ -70,15 +81,28 @@ class RuleEngine:
 
         elif op == ConditionOperator.MATCHES_REGEX:
             try:
-                match = re.search(str(target_val), str(field_val), re.IGNORECASE)
+                target_str = str(target_val)
+                # Cap regex pattern length to prevent excessively complex nested patterns
+                if len(target_str) > 1000:
+                    return False
+                # Limit evaluated text length to first 64 KB to mitigate ReDoS
+                field_str = str(field_val)[:65536]
+                match = re.search(target_str, field_str, re.IGNORECASE)
                 if match:
-                    # Save any named capture groups as dynamic variables!
+                    # Save any named capture groups as dynamic variables safely!
                     groupdict = match.groupdict()
                     for k, v in groupdict.items():
-                        variables[k] = v
+                        is_reserved = (
+                            k in RESERVED_VARIABLE_KEYS
+                            or any(k.startswith(p) for p in ("file.", "content.", "pdf.", "image.", "system.", "date."))
+                        )
+                        if not is_reserved and k not in variables:
+                            variables[k] = v
+                        # Provide explicit custom namespace for unambiguous referencing
+                        variables[f"custom.{k}"] = v
                     return True
                 return False
-            except re.error:
+            except (re.error, TimeoutError):
                 return False
 
         elif op == ConditionOperator.BEFORE:

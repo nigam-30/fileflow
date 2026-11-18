@@ -2,11 +2,15 @@ import os
 import sys
 import threading
 import subprocess
+import secrets
+import urllib.parse
 import ctypes
 from ctypes import wintypes
 from typing import List, Optional, Dict, Any
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -60,16 +64,64 @@ class OPENFILENAMEW(ctypes.Structure):
         ("FlagsEx", wintypes.DWORD),
     ]
 
-app = FastAPI(title="FileFlow Automation Engine", version="1.0.2")
+app = FastAPI(title="FileFlow Automation Engine", version="1.0.3")
 
-# Enable CORS for React frontend
+# Security: Per-session API Authentication Token
+API_TOKEN: Optional[str] = None
+
+def get_or_create_api_token() -> str:
+    global API_TOKEN
+    if not API_TOKEN:
+        env_token = os.environ.get("FILEFLOW_API_TOKEN")
+        if env_token:
+            API_TOKEN = env_token
+        else:
+            API_TOKEN = secrets.token_hex(32)
+    return API_TOKEN
+
+def set_api_token(token: str):
+    global API_TOKEN
+    API_TOKEN = token
+
+# Restrict CORS to localhost/127.0.0.1 (any port) to prevent web-to-host attacks from remote sites
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origin_regex=r"^https?://(127\.0\.0\.1|localhost)(:\d+)?$",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Enforce API Authentication Token on all /api/ endpoints
+class TokenAuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+        # Exclude static assets and root page from authentication
+        if not path.startswith("/api/"):
+            return await call_next(request)
+
+        # Allow disabling auth for test suites or specific headless runs
+        if os.environ.get("FILEFLOW_DISABLE_AUTH") == "1":
+            return await call_next(request)
+
+        # Allow CORS preflight requests
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
+        expected_token = get_or_create_api_token()
+        token = request.headers.get("X-FileFlow-Token")
+        if not token:
+            token = request.query_params.get("token")
+
+        if not token or not secrets.compare_digest(token, expected_token):
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Unauthorized: Invalid or missing API token"}
+            )
+
+        return await call_next(request)
+
+app.add_middleware(TokenAuthMiddleware)
 
 db = Database(get_default_db_path())
 engine = RuleEngine(db)
@@ -163,6 +215,30 @@ def scan_duplicates(req: DuplicateScanRequest):
 
 @app.post("/api/duplicates/delete")
 def delete_duplicate(req: DuplicateDeleteRequest):
+    if not os.path.exists(req.file_path) or not os.path.isfile(req.file_path):
+        raise HTTPException(status_code=400, detail="File does not exist or is not a regular file")
+
+    real_file = os.path.abspath(os.path.realpath(req.file_path))
+    is_scanned = DuplicateFinder.is_known_duplicate(real_file)
+
+    # Allow if discovered during duplicate scan or if inside a configured monitored folder
+    in_monitored_folder = False
+    monitored = db.get_monitored_folders()
+    for f in monitored:
+        f_path = os.path.abspath(os.path.realpath(f["path"]))
+        try:
+            if os.path.commonpath([f_path, real_file]) == f_path:
+                in_monitored_folder = True
+                break
+        except ValueError:
+            continue
+
+    if not is_scanned and not in_monitored_folder:
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: Cannot delete file outside scanned duplicate results or monitored folders"
+        )
+
     success = DuplicateFinder.delete_file(req.file_path, req.recycle)
     if not success:
         raise HTTPException(status_code=500, detail="Could not delete or recycle file")
@@ -250,8 +326,15 @@ def get_update_status(force: bool = False):
 
 @app.post("/api/open-external")
 def open_external_url(req: OpenUrlRequest):
+    raw_url = req.url.strip()
+    parsed = urllib.parse.urlparse(raw_url)
+    if parsed.scheme.lower() not in ("http", "https"):
+        raise HTTPException(status_code=400, detail="Only HTTP and HTTPS URLs are allowed")
+    if not parsed.netloc:
+        raise HTTPException(status_code=400, detail="Invalid URL format: missing host")
+
     import webbrowser
-    webbrowser.open(req.url)
+    webbrowser.open(raw_url)
     return {"success": True}
 
 # --- Activity Logs ---
@@ -356,7 +439,24 @@ if dist_dir and os.path.exists(dist_dir):
 
     @app.get("/{full_path:path}")
     def serve_frontend(full_path: str):
-        file_path = os.path.join(dist_dir, full_path)
-        if full_path and os.path.exists(file_path) and os.path.isfile(file_path):
-            return FileResponse(file_path)
-        return FileResponse(os.path.join(dist_dir, "index.html"))
+        if not dist_dir:
+            raise HTTPException(status_code=404, detail="Frontend distribution not found")
+
+        real_dist = os.path.abspath(dist_dir)
+        clean_path = full_path.lstrip("/\\")
+        target = os.path.abspath(os.path.join(real_dist, clean_path))
+
+        # Enforce strict path canonicalization to prevent path traversal
+        try:
+            is_subpath = os.path.commonpath([real_dist, target]) == real_dist
+        except ValueError:
+            is_subpath = False
+
+        if full_path and is_subpath and os.path.isfile(target):
+            return FileResponse(target)
+
+        # Fallback to index.html for client-side single page app routing
+        index_file = os.path.join(real_dist, "index.html")
+        if os.path.isfile(index_file):
+            return FileResponse(index_file)
+        raise HTTPException(status_code=404, detail="index.html not found")

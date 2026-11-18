@@ -1,9 +1,13 @@
 import os
+import sys
 import shutil
+import shlex
 import subprocess
 import zipfile
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 from ..core.models import Action, ActionType, CollisionPolicy, AuditLogEntry, LogStatus
+
+CMD_BUILTINS = {"echo", "dir", "type", "copy", "del", "move", "mkdir", "rmdir", "cls", "ren", "rename"}
 
 class ActionDispatcher:
     @staticmethod
@@ -175,15 +179,51 @@ class ActionDispatcher:
 
     @classmethod
     def _execute_command(cls, action: Action, source_path: str, variables: Dict[str, Any]) -> Tuple[LogStatus, Optional[str], Optional[str]]:
-        if not action.command:
+        if not action.command or not action.command.strip():
             return LogStatus.FAILED, None, "No command specified"
-        
-        cmd = cls.resolve_template(action.command, variables)
-        proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
-        if proc.returncode == 0:
-            return LogStatus.SUCCESS, None, f"Executed command: {cmd}"
-        else:
-            return LogStatus.FAILED, None, f"Command exited with error ({proc.returncode}): {proc.stderr.strip()}"
+
+        raw_cmd = action.command.strip()
+        try:
+            # Tokenize command line arguments safely without shell interpretation
+            tokens = shlex.split(raw_cmd, posix=False)
+        except Exception:
+            tokens = raw_cmd.split()
+
+        if not tokens:
+            return LogStatus.FAILED, None, "Empty command"
+
+        # Safely resolve template variables token by token to prevent shell metacharacter injection
+        resolved_args: List[str] = []
+        for token in tokens:
+            unquoted = token
+            if (token.startswith('"') and token.endswith('"')) or (token.startswith("'") and token.endswith("'")):
+                unquoted = token[1:-1]
+            resolved = cls.resolve_template(unquoted, variables)
+            resolved_args.append(resolved)
+
+        # On Windows, wrap cmd builtins (e.g. echo, dir) using cmd.exe /c
+        if sys.platform == "win32" and resolved_args and resolved_args[0].lower() in CMD_BUILTINS:
+            resolved_args = ["cmd.exe", "/c"] + resolved_args
+
+        cmd_repr = " ".join(resolved_args)
+        try:
+            proc = subprocess.run(
+                resolved_args,
+                shell=False,
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            if proc.returncode == 0:
+                return LogStatus.SUCCESS, None, f"Executed command: {cmd_repr}"
+            else:
+                return LogStatus.FAILED, None, f"Command exited with error ({proc.returncode}): {proc.stderr.strip()}"
+        except subprocess.TimeoutExpired:
+            return LogStatus.FAILED, None, f"Command timed out after 30 seconds: {cmd_repr}"
+        except FileNotFoundError:
+            return LogStatus.FAILED, None, f"Command executable not found: {resolved_args[0]}"
+        except Exception as e:
+            return LogStatus.FAILED, None, f"Command execution error: {str(e)}"
 
     @classmethod
     def _execute_notify(cls, action: Action, variables: Dict[str, Any]) -> Tuple[LogStatus, Optional[str], Optional[str]]:

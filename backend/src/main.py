@@ -12,11 +12,17 @@ import pystray
 from pystray import MenuItem as item
 
 # Set AppUserModelID so Windows taskbar groups and shows FileFlow's custom icon
+_instance_mutex = None
 if sys.platform == 'win32':
     try:
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('fileflow.desktop.app.v1')
-    except Exception:
-        pass
+        kernel32 = ctypes.windll.kernel32
+        _instance_mutex = kernel32.CreateMutexW(None, False, "Local\\FileFlow_Desktop_Instance_Mutex")
+        if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+            print("Another instance of FileFlow is already running. Exiting.")
+            sys.exit(0)
+    except Exception as e:
+        print(f"Startup guard warning: {e}")
 
 # Setup paths for frozen and development environments
 if getattr(sys, 'frozen', False):
@@ -29,17 +35,28 @@ else:
     sys.path.insert(0, APP_DIR)
 
 try:
-    from src.api.server import app
+    from src.api.server import app, get_or_create_api_token
     from src.core.memory import trim_memory
 except ModuleNotFoundError:
     try:
-        from api.server import app
+        from api.server import app, get_or_create_api_token
         from core.memory import trim_memory
     except ModuleNotFoundError:
-        from .api.server import app
+        from .api.server import app, get_or_create_api_token
         from .core.memory import trim_memory
 
-PORT = 8765
+DEFAULT_PORT = 8765
+
+def find_free_port(preferred: int = DEFAULT_PORT) -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(("127.0.0.1", preferred))
+            return preferred
+        except OSError:
+            pass
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
 
 def start_server(port: int):
     try:
@@ -52,12 +69,15 @@ def start_server(port: int):
         with open(log_path, "a") as f:
             f.write(f"Server exception: {e}\n")
 
-def wait_for_server(port: int, timeout: float = 8.0) -> bool:
+def wait_for_server(port: int, token: str, timeout: float = 8.0) -> bool:
     start_time = time.time()
     url = f"http://127.0.0.1:{port}/api/rules"
     while time.time() - start_time < timeout:
         try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'FileFlow'})
+            req = urllib.request.Request(
+                url,
+                headers={'User-Agent': 'FileFlow', 'X-FileFlow-Token': token}
+            )
             with urllib.request.urlopen(req, timeout=0.5) as resp:
                 if resp.status == 200:
                     return True
@@ -112,11 +132,15 @@ def get_tray_image() -> Image.Image:
     return Image.new("RGBA", (32, 32), (37, 99, 235, 255))
 
 class DesktopApi:
-    def __init__(self):
+    def __init__(self, token: str = ""):
         self._window = None
+        self._token = token
 
     def set_window(self, window):
         self._window = window
+
+    def get_api_token(self):
+        return self._token
 
     def browse_folder(self):
         try:
@@ -139,20 +163,24 @@ class DesktopApi:
         return ""
 
 def main():
+    # 0. Acquire dynamic port and session authentication token
+    port = find_free_port(DEFAULT_PORT)
+    token = get_or_create_api_token()
+
     # 1. Start server in daemon thread
-    server_thread = threading.Thread(target=start_server, args=(PORT,), daemon=True)
+    server_thread = threading.Thread(target=start_server, args=(port,), daemon=True)
     server_thread.start()
 
     # 2. Wait until internal engine is ready
-    server_ready = wait_for_server(PORT, timeout=8.0)
+    server_ready = wait_for_server(port, token=token, timeout=8.0)
     if not server_ready:
         log_path = os.path.join(APP_DIR, "fileflow_error.log")
         with open(log_path, "a") as f:
             f.write("Failed to connect to internal server within timeout\n")
 
     # 3. Create native desktop window
-    url = f"http://127.0.0.1:{PORT}"
-    api = DesktopApi()
+    url = f"http://127.0.0.1:{port}/?token={token}"
+    api = DesktopApi(token=token)
     window = webview.create_window(
         title="FileFlow - Automated File Organizer",
         url=url,
@@ -177,7 +205,11 @@ def main():
     def trigger_scan_tray(icon=None, item=None):
         def _scan():
             try:
-                req = urllib.request.Request(f"http://127.0.0.1:{PORT}/api/scan", method="POST")
+                req = urllib.request.Request(
+                    f"http://127.0.0.1:{port}/api/scan",
+                    method="POST",
+                    headers={"X-FileFlow-Token": token}
+                )
                 urllib.request.urlopen(req, timeout=5)
             except Exception:
                 pass
@@ -198,7 +230,7 @@ def main():
                 else:
                     if tray_icon:
                         tray_icon.notify(
-                            "You are running the latest version of FileFlow (v1.0.2).",
+                            "You are running the latest version of FileFlow (v1.0.3).",
                             "Up to Date"
                         )
             except Exception as e:

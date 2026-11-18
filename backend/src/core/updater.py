@@ -3,7 +3,7 @@ import json
 import urllib.request
 from typing import Dict, Any, Optional
 
-CURRENT_VERSION = "1.0.2"
+CURRENT_VERSION = "1.0.3"
 GITHUB_REPO = "nigam-30/fileflow"
 CACHE_DURATION_SECONDS = 3600 * 2  # 2 hours cache
 

@@ -270,6 +270,27 @@ dist/FileFlow-Setup-v1.0.3.exe
 - **Safe Deletion**: Files deleted by rules or duplicate cleanups go straight to your native OS Recycle Bin, allowing easy restoration.
 - **Safe File Locking**: Real-time event debouncing ensures files are completely finished saving or downloading before any rule moves them.
 
+---
+
+## 📚 Architecture & Engineering Documentation
+
+FileFlow is comprehensively documented following **The Vibe Coding Blueprint** standards. Explore the architectural blueprints, system contracts, and developer specifications in [`/docs`](docs/):
+
+| Document | Focus & Core Question |
+| :--- | :--- |
+| 📋 **[PRD.md](docs/PRD.md)** | *What are we building?* Product vision, personas, core features, and non-functional goals. |
+| 🏗️ **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** | *How does it work?* Modular hybrid desktop architecture, loopback REST IPC, Watchdog engine, and data flows. |
+| 🎨 **[DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** | *What should it look and feel like?* Light/dark palette, typography, 4px spacing scale, and Lucide icons. |
+| 🗄️ **[DATABASE.md](docs/DATABASE.md)** | *What data exists and how does it relate?* SQLite schema (`rules`, `monitored_folders`, `processed_files`, `audit_logs`). |
+| 🔒 **[SECURITY.md](docs/SECURITY.md)** | *What must be protected and how?* Per-session API token authentication, path traversal guards, and Recycle Bin safety. |
+| 🔌 **[API.md](docs/API.md)** | *API contracts & endpoints.* Comprehensive REST API reference, request/response models, and status codes. |
+| 🗺️ **[UX_FLOWS.md](docs/UX_FLOWS.md)** | *User journeys.* Step-by-step state transitions for folder monitoring, rule building, and duplicate cleanup. |
+| 💻 **[CODE_STYLE.md](docs/CODE_STYLE.md)** | *How should code be written?* Python 3.11+ & TypeScript conventions, naming rules, and error handling. |
+| 🧪 **[TESTING.md](docs/TESTING.md)** | *How will we know it works?* Pytest test suites, duplicate finder verification, and definition of done. |
+| 🤖 **[AGENTS.md](AGENTS.md)** | *AI agent operational guidelines.* Source of truth hierarchy, planning checklists, and safe coding protocols. |
+
+---
+
 
 
 ## 🤝 Acknowledgements & Special Thanks

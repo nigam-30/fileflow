@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="./assets/banner.png" alt="FileFlow Banner" width="900" style="border-radius: 14px;" />
+</div>
+
 # FileFlow 📂⚡
 
 **Intelligent Automated File Organization, Smart Sorting & Duplicate Cleaner for Windows**
@@ -144,6 +148,11 @@ With FileFlow active, the exact same cluttered directory is transformed into a c
 ---
 
 ## 🏗️ Architecture
+
+<div align="center">
+  <img src="./assets/architecture_workflow.png" alt="FileFlow System Architecture & Workflow" width="950" style="border-radius: 12px; margin: 16px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.4);" />
+  <p><em><b>System Architecture & Reactive Workflow.</b> Decoupled local daemon, Win32 kernel event observer, temporal debouncer, multimodal extractors, deterministic rule engine, and progressive 4-stage deduplication engine.</em></p>
+</div>
 
 FileFlow combines a high-performance Python engine with a modern, reactive user interface:
 
